@@ -31,6 +31,7 @@ $(call inherit-product, device/samsung/serrano-common/nfc.mk)
 
 # Device overlay
 # Control all overlays here because we do not want the Mms xmls from qcom-common
+# This looks like it is not needed anymore because qcom-common no longer has an Mms overlay!
 DEVICE_PACKAGE_OVERLAYS := device/samsung/serranolteusc/overlay
 DEVICE_PACKAGE_OVERLAYS += device/samsung/serrano-common/overlay
 DEVICE_PACKAGE_OVERLAYS += device/samsung/qcom-common/overlay/frameworks
@@ -38,13 +39,8 @@ DEVICE_PACKAGE_OVERLAYS += device/samsung/qcom-common/overlay/packages/services
 DEVICE_PACKAGE_OVERLAYS += device/samsung/qcom-common/overlay/packages/apps/Contacts
 DEVICE_PACKAGE_OVERLAYS += device/samsung/msm8930-common/overlay
 
-# Permissions
+# Permissions - might not be needed anymore?
 PRODUCT_COPY_FILES += \
     frameworks/native/data/etc/android.hardware.telephony.cdma.xml:system/etc/permissions/android.hardware.telephony.cdma.xml
-
-# Ramdisk 
-PRODUCT_COPY_FILES += \
-    $(LOCAL_PATH)/rootdir/init.carrier.rc:root/init.carrier.rc 
-
 
 
