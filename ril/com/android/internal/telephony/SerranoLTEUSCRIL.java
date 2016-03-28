@@ -32,6 +32,7 @@ import java.util.Collections;
 import com.android.internal.telephony.cdma.CdmaInformationRecords;
 import com.android.internal.telephony.cdma.CdmaInformationRecords.CdmaSignalInfoRec;
 import com.android.internal.telephony.cdma.SignalToneUtil;
+import android.os.SystemProperties;
 
 /**
  * RIL customization for Galaxy S4 Mini (LTE USC) device
@@ -265,6 +266,115 @@ public class SerranoLTEUSCRIL extends RIL {
         return new SignalStrength(gsmSignalStrength, gsmBitErrorRate, cdmaDbm, cdmaEcio, evdoDbm,
                 evdoEcio, evdoSnr, lteSignalStrength, lteRsrp, lteRsrq, lteRssnr, lteCqi,
                 tdScdmaRscp, isGsm);
+    }
+
+    @Override
+    protected RILRequest
+    processSolicited (Parcel p) {
+        int serial, error, request;
+        RILRequest rr;
+        int dataPosition = p.dataPosition(); // save off position within the Parcel
+
+        serial = p.readInt();
+        error = p.readInt();
+
+        rr = mRequestList.get(serial);
+        if (rr == null || error != 0 || p.dataAvail() <= 0) {
+            p.setDataPosition(dataPosition);
+            return super.processSolicited(p);
+        }
+
+        try { switch (rr.mRequest) {
+            case RIL_REQUEST_OPERATOR:
+                String operators[] = (String [])responseStrings(p);
+
+                Rlog.v(RILJ_LOG_TAG, "SerranoLTEUSCRIL: Operator response");
+       
+                if (operators == null || operators.length < 0) {
+                   Rlog.v(RILJ_LOG_TAG, "SerranoLTEUSCRIL: operators is empty or null");
+                } else {
+                   Rlog.v(RILJ_LOG_TAG, "SerranoLTEUSCRIL: length of operators:"+operators.length);
+                   for (int i = 0; i < operators.length; i++) {
+                      Rlog.v(RILJ_LOG_TAG, "SerranoLTEUSCRIL: operator["+i+"]:"+operators[i]);
+                   }
+                } 
+
+                Rlog.v(RILJ_LOG_TAG, "SerranoLTEUSCRIL: Forcing operator name using build property ro.cdma.home.operator.alpha");
+                operators[0] = SystemProperties.get("ro.cdma.home.operator.alpha");
+
+                if (RILJ_LOGD) riljLog(rr.serialString() + "< " + requestToString(rr.mRequest)
+                                + " " + retToString(rr.mRequest, operators));
+
+                if (rr.mResult != null) {
+                        AsyncResult.forMessage(rr.mResult, operators, null);
+                        rr.mResult.sendToTarget();
+                }
+                mRequestList.remove(serial);
+                break;
+            case RIL_REQUEST_VOICE_REGISTRATION_STATE:
+                String voiceRegStates[] = (String [])responseStrings(p);
+
+                Rlog.v(RILJ_LOG_TAG, "SerranoLTEUSCRIL: VoiceRegistrationState response");
+
+                if (voiceRegStates == null || voiceRegStates.length < 0) {
+                   Rlog.v(RILJ_LOG_TAG, "SerranoLTEUSCRIL: voiceRegStates is empty or null");
+                } else {
+                   Rlog.v(RILJ_LOG_TAG, "SerranoLTEUSCRIL: length of voiceRegStates:"+voiceRegStates.length);
+                   for (int i = 0; i < voiceRegStates.length; i++) {
+                      Rlog.v(RILJ_LOG_TAG, "SerranoLTEUSCRIL: voiceRegStates["+i+"]:"+voiceRegStates[i]);
+                   }
+                }
+ 
+                if (RILJ_LOGD) riljLog(rr.serialString() + "< " + requestToString(rr.mRequest)
+                                + " " + retToString(rr.mRequest, voiceRegStates));
+
+                if (rr.mResult != null) {
+                        AsyncResult.forMessage(rr.mResult, voiceRegStates, null);
+                        rr.mResult.sendToTarget();
+                }
+                mRequestList.remove(serial);
+                break;
+             case RIL_REQUEST_DATA_REGISTRATION_STATE:
+                String dataRegStates[] = (String [])responseStrings(p);
+
+                Rlog.v(RILJ_LOG_TAG, "SerranoLTEUSCRIL: DataRegistrationState response");
+               
+                if (dataRegStates == null || dataRegStates.length < 0) {
+                   Rlog.v(RILJ_LOG_TAG, "SerranoLTEUSCRIL: dataRegStates is empty or null");
+                } else {
+                   Rlog.v(RILJ_LOG_TAG, "SerranoLTEUSCRIL: length of dataRegStates:"+dataRegStates.length);
+                   for (int i = 0; i < dataRegStates.length; i++) {
+                      Rlog.v(RILJ_LOG_TAG, "SerranoLTEUSCRIL: dataRegStates["+i+"]:"+dataRegStates[i]);
+                   }
+                }
+  
+                if (RILJ_LOGD) riljLog(rr.serialString() + "< " + requestToString(rr.mRequest)
+                                + " " + retToString(rr.mRequest, dataRegStates));
+
+                if (rr.mResult != null) {
+                        AsyncResult.forMessage(rr.mResult, dataRegStates, null);
+                        rr.mResult.sendToTarget();
+                }
+                mRequestList.remove(serial);
+                break;
+            default:
+                p.setDataPosition(dataPosition);
+                return super.processSolicited(p);
+        }} catch (Throwable tr) {
+                // Exceptions here usually mean invalid RIL responses
+
+                Rlog.w(RILJ_LOG_TAG, rr.serialString() + "< "
+                                + requestToString(rr.mRequest)
+                                + " exception, possible invalid RIL response", tr);
+
+                if (rr.mResult != null) {
+                        AsyncResult.forMessage(rr.mResult, null, tr);
+                        rr.mResult.sendToTarget();
+                }
+                return rr;
+        }
+
+        return rr;
     }
 
     @Override
