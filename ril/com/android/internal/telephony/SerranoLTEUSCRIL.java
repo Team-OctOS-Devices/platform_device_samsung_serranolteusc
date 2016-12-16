@@ -23,6 +23,7 @@ import android.telephony.Rlog;
 import android.os.AsyncResult;
 import android.os.Message;
 import android.os.Parcel;
+import android.telephony.ModemActivityInfo;
 import android.telephony.PhoneNumberUtils;
 import android.telephony.SignalStrength;
 import com.android.internal.telephony.uicc.IccCardApplicationStatus;
@@ -182,18 +183,18 @@ public class SerranoLTEUSCRIL extends RIL {
             if (uusInfoPresent == 1) {
                 dc.uusInfo = new UUSInfo();
                 dc.uusInfo.setType(p.readInt());
-                riljLogv("dc.uusInfo.Type: " + dc.uusInfo.getType());
+                //riljLogv("dc.uusInfo.Type: " + dc.uusInfo.getType());
                 dc.uusInfo.setDcs(p.readInt());
-                riljLogv("dc.uusInfo.Dcs: " + dc.uusInfo.getDcs());
+                //riljLogv("dc.uusInfo.Dcs: " + dc.uusInfo.getDcs());
                 byte[] userData = p.createByteArray();
                 dc.uusInfo.setUserData(userData);
-                riljLogv(String.format("Incoming UUS : type=%d, dcs=%d, length=%d",
-                                dc.uusInfo.getType(), dc.uusInfo.getDcs(),
-                                dc.uusInfo.getUserData().length));
-                riljLogv("Incoming UUS : data (string)="
-                        + new String(dc.uusInfo.getUserData()));
-                riljLogv("Incoming UUS : data (hex): "
-                        + IccUtils.bytesToHexString(dc.uusInfo.getUserData()));
+                //riljLogv(String.format("Incoming UUS : type=%d, dcs=%d, length=%d",
+                //                dc.uusInfo.getType(), dc.uusInfo.getDcs(),
+                //                dc.uusInfo.getUserData().length));
+                //riljLogv("Incoming UUS : data (string)="
+                //        + new String(dc.uusInfo.getUserData()));
+                //riljLogv("Incoming UUS : data (hex): "
+                //        + IccUtils.bytesToHexString(dc.uusInfo.getUserData()));
             } else {
                 riljLogv("Incoming UUS : NOT present!");
             }
@@ -270,7 +271,7 @@ public class SerranoLTEUSCRIL extends RIL {
 
     @Override
     protected RILRequest
-    processSolicited (Parcel p) {
+    processSolicited (Parcel p, int type) {
         int serial, error, request;
         RILRequest rr;
         int dataPosition = p.dataPosition(); // save off position within the Parcel
@@ -281,7 +282,7 @@ public class SerranoLTEUSCRIL extends RIL {
         rr = mRequestList.get(serial);
         if (rr == null || error != 0 || p.dataAvail() <= 0) {
             p.setDataPosition(dataPosition);
-            return super.processSolicited(p);
+            return super.processSolicited(p, type);
         }
 
         try { switch (rr.mRequest) {
@@ -359,7 +360,7 @@ public class SerranoLTEUSCRIL extends RIL {
                 break;
             default:
                 p.setDataPosition(dataPosition);
-                return super.processSolicited(p);
+                return super.processSolicited(p, type);
         }} catch (Throwable tr) {
                 // Exceptions here usually mean invalid RIL responses
 
@@ -379,7 +380,7 @@ public class SerranoLTEUSCRIL extends RIL {
 
     @Override
     protected void
-    processUnsolicited (Parcel p) {
+    processUnsolicited (Parcel p, int type) {
         Object ret;
         int dataPosition = p.dataPosition(); // save off position within the Parcel
         int response = p.readInt();
@@ -405,7 +406,7 @@ public class SerranoLTEUSCRIL extends RIL {
                 p.setDataPosition(dataPosition);
 
                 // Forward responses that we are not overriding to the super class
-                super.processUnsolicited(p);
+                super.processUnsolicited(p, type);
                 return;
         }
     }
@@ -556,5 +557,19 @@ public class SerranoLTEUSCRIL extends RIL {
         }
         return failCause;
     }  
+
+
+    /**
+    * @hide
+    */
+    public void getModemActivityInfo(Message response) {
+        riljLog("getModemActivityInfo: not supported");
+        if (response != null) {
+            CommandException ex = new CommandException(
+                CommandException.Error.REQUEST_NOT_SUPPORTED);
+            AsyncResult.forMessage(response, null, ex);
+            response.sendToTarget();
+        }
+    }
 }
 

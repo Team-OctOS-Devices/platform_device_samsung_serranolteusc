@@ -26,6 +26,9 @@
 # Assert
 TARGET_OTA_ASSERT_DEVICE := serranolteusc,R890,SCH-R890
 
+# Inherit from proprietary vendor
+-include vendor/samsung/serranolteusc/BoardConfigVendor.mk
+
 # Kernel
 TARGET_KERNEL_VARIANT_CONFIG := msm8930_serrano_usc_defconfig
 
@@ -37,4 +40,3 @@ BOARD_HAVE_MULTI_COLOR_LED := true
 
 # Custom RIL class
 BOARD_RIL_CLASS := ../../../device/samsung/serranolteusc/ril/
-

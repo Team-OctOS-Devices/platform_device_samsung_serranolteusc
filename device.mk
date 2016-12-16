@@ -17,13 +17,9 @@
 PRODUCT_PROPERTY_OVERRIDES += \
     ro.telephony.ril_class=SerranoLTEUSCRIL
 
-# Stock RIL, GPS, and audio files
-PRODUCT_COPY_FILES += \
-    device/samsung/serranolteusc/proprietary/lib/libril.so:system/lib/libril.so \
-    device/samsung/serranolteusc/proprietary/lib/libsec-ril.so:system/lib/libsec-ril.so \
-    device/samsung/serranolteusc/proprietary/lib/libloc_api_v02.so:system/lib/libloc_api_v02.so \
-    device/samsung/serranolteusc/proprietary/lib/libaudcal.so:system/lib/libaudcal.so \
-    device/samsung/serranolteusc/proprietary/vendor/lib/liblbs_core.so:system/vendor/lib/liblbs_core.so 
+# Get non-open-source specific aspects
+# Call this BEFORE serrano-common        
+$(call inherit-product, vendor/samsung/serranolteusc/serranolteusc-vendor.mk)
 
 # Inherit from serrano-common
 $(call inherit-product, device/samsung/serrano-common/serrano-common.mk)
@@ -31,7 +27,6 @@ $(call inherit-product, device/samsung/serrano-common/nfc.mk)
 
 # Device overlay
 # Control all overlays here because we do not want the Mms xmls from qcom-common
-# This looks like it is not needed anymore because qcom-common no longer has an Mms overlay!
 DEVICE_PACKAGE_OVERLAYS := device/samsung/serranolteusc/overlay
 DEVICE_PACKAGE_OVERLAYS += device/samsung/serrano-common/overlay
 DEVICE_PACKAGE_OVERLAYS += device/samsung/qcom-common/overlay/frameworks
@@ -39,8 +34,7 @@ DEVICE_PACKAGE_OVERLAYS += device/samsung/qcom-common/overlay/packages/services
 DEVICE_PACKAGE_OVERLAYS += device/samsung/qcom-common/overlay/packages/apps/Contacts
 DEVICE_PACKAGE_OVERLAYS += device/samsung/msm8930-common/overlay
 
-# Permissions - might not be needed anymore?
+# Permissions
 PRODUCT_COPY_FILES += \
     frameworks/native/data/etc/android.hardware.telephony.cdma.xml:system/etc/permissions/android.hardware.telephony.cdma.xml
-
 
