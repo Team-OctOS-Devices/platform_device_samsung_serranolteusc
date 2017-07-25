@@ -378,6 +378,24 @@ public class SerranoLTEUSCRIL extends RIL {
         return rr;
     }
 
+    private void
+    fixNitz(Parcel p) {
+        int dataPosition = p.dataPosition();
+        String nitz = p.readString();
+        long nitzReceiveTime = p.readLong();
+
+        String[] nitzParts = nitz.split(",");
+        if (nitzParts.length >= 4) {
+            // 0=date, 1=time+zone, 2=dst, 3(+)=garbage that confuses ServiceStateTracker
+            nitz = nitzParts[0] + "," + nitzParts[1] + "," + nitzParts[2];
+            p.setDataPosition(dataPosition);
+            p.writeString(nitz);
+            p.writeLong(nitzReceiveTime);
+            // The string is shorter now, drop the extra bytes
+            p.setDataSize(p.dataPosition());
+        }
+    }
+
     @Override
     protected void
     processUnsolicited (Parcel p, int type) {
@@ -386,6 +404,11 @@ public class SerranoLTEUSCRIL extends RIL {
         int response = p.readInt();
 
         switch(response) {
+           case RIL_UNSOL_NITZ_TIME_RECEIVED:
+                fixNitz(p);
+                p.setDataPosition(dataPosition);
+                super.processUnsolicited(p, type);
+                break;
             case RIL_UNSOL_RESPONSE_IMS_NETWORK_STATE_CHANGED:
                 ret = responseVoid(p);
                 break;
